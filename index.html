@@ -1,0 +1,284 @@
+<!doctype html><html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0e1512">
+<title>Flip Check</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2288%22>%F0%9F%92%B7</text></svg>">
+</head><body>
+<style>
+  :root{
+    /* light (default) — warm off-white with a faint green bias */
+    --ink:#eef3ef; --surface:#ffffff; --surface2:#f2f7f3; --field:#f6f9f7;
+    --line:#dbe4de; --go:#0e9d6a; --warn:#bd7a10; --bad:#d1453a;
+    --text:#16221d; --muted:#5e7268; --faint:#93a49b;
+    --hero-a:#e8f2ec; --hero-b:#ffffff;
+    --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;
+    --sans:-apple-system,system-ui,"Segoe UI",Roboto,sans-serif;
+  }
+  :root[data-theme="dark"]{
+    --ink:#0e1512; --surface:#162320; --surface2:#1e2f29; --field:var(--field);
+    --line:#2a3d35; --go:#35d29a; --warn:#f2b544; --bad:#f2766b;
+    --text:#e9f1ec; --muted:#8ba79a; --faint:#5f7a6f;
+    --hero-a:#1e2f29; --hero-b:#162320;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ink);color:var(--text);font-family:var(--sans);
+       -webkit-font-smoothing:antialiased;line-height:1.45}
+  .wrap{max-width:460px;margin:0 auto;padding:22px 16px 60px}
+  header{margin-bottom:18px}
+  .htop{display:flex;justify-content:space-between;align-items:center}
+  #themeBtn{background:var(--surface);border:1px solid var(--line);color:var(--text);
+        width:38px;height:38px;border-radius:11px;font-size:16px;cursor:pointer;line-height:1}
+  #themeBtn:hover{border-color:var(--go)}
+  h1{font:650 20px/1 var(--sans);margin:0;letter-spacing:-.2px}
+  h1 .dot{color:var(--go)}
+  .tag{color:var(--muted);font-size:12.5px;margin-top:5px}
+  label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.09em;
+        color:var(--muted);margin:0 0 6px 2px}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:16px;
+        padding:16px;margin-bottom:14px}
+  input[type=text],input[type=number]{width:100%;background:var(--field);border:1px solid var(--line);
+        color:var(--text);border-radius:11px;padding:13px 13px;font:500 16px var(--sans)}
+  input:focus{outline:none;border-color:var(--go)}
+  input[type=number]{font-family:var(--mono);font-variant-numeric:tabular-nums}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+  .suggest{margin-top:10px;display:flex;flex-direction:column;gap:6px}
+  .chip{display:flex;justify-content:space-between;align-items:center;gap:8px;
+        background:var(--surface2);border:1px solid var(--line);border-radius:10px;
+        padding:9px 11px;cursor:pointer;font-size:13px}
+  .chip:hover{border-color:var(--go)}
+  .chip b{font-family:var(--mono);color:var(--text)}
+  .chip .q{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .val{font-family:var(--mono);font-variant-numeric:tabular-nums}
+  .stats2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .stats2 .big{font:600 30px var(--mono);letter-spacing:-1px;margin-top:3px}
+  .stats2 .range{color:var(--muted);font-size:12.5px;margin-top:3px}
+  #stbig.fast{color:var(--go)} #stbig.mid{color:var(--warn)} #stbig.slow{color:var(--bad)}
+  #stbig.none{color:var(--faint)}
+  .pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;
+        padding:3px 9px;border-radius:999px;font-family:var(--sans)}
+  .pill.fast{background:rgba(53,210,154,.14);color:var(--go)}
+  .pill.mid{background:rgba(242,181,68,.14);color:var(--warn)}
+  .pill.slow{background:rgba(242,118,107,.14);color:var(--bad)}
+  .pill.none{background:var(--field);color:var(--faint)}
+  .ebay{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+  .ebay a{text-align:center;text-decoration:none;background:var(--field);border:1px solid var(--line);
+        color:var(--text);border-radius:11px;padding:12px;font-size:13.5px;font-weight:600}
+  .ebay a:hover{border-color:var(--go)}
+  .ebay a small{display:block;color:var(--muted);font-weight:500;font-size:11px;margin-top:2px}
+  .slider-row{display:flex;justify-content:space-between;align-items:center;margin:0 2px 8px}
+  .slider-row .v{font-family:var(--mono);color:var(--go);font-weight:600}
+  input[type=range]{width:100%;accent-color:var(--go)}
+  .hero{background:linear-gradient(160deg,var(--hero-a),var(--hero-b));
+        border:1px solid var(--line);border-radius:18px;padding:20px;text-align:center;
+        margin-bottom:14px;position:relative;overflow:hidden}
+  .hero .lab{font-size:11px;text-transform:uppercase;letter-spacing:.11em;color:var(--muted)}
+  .hero .offer{font:700 46px/1 var(--mono);letter-spacing:-1.5px;margin:8px 0 4px}
+  .hero .sub{font-size:13px;color:var(--muted)}
+  .verdict{margin-top:14px;padding:12px;border-radius:12px;font-size:14.5px;font-weight:600;
+        display:flex;justify-content:center;gap:8px;align-items:center}
+  .verdict.go{background:rgba(53,210,154,.12);color:var(--go)}
+  .verdict.warn{background:rgba(242,181,68,.12);color:var(--warn)}
+  .verdict.bad{background:rgba(242,118,107,.12);color:var(--bad)}
+  .verdict .num{font-family:var(--mono)}
+  .memory summary{cursor:pointer;color:var(--muted);font-size:13px;padding:6px 2px;list-style:none}
+  .memory summary::-webkit-details-marker{display:none}
+  .memory summary::before{content:"▸ ";color:var(--faint)}
+  .memory[open] summary::before{content:"▾ "}
+  .memlist{max-height:280px;overflow-y:auto;margin-top:8px;display:flex;flex-direction:column;gap:5px}
+  .foot{color:var(--faint);font-size:11.5px;text-align:center;margin-top:20px;line-height:1.6}
+  .hidden{display:none}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="htop">
+      <h1>Flip Check<span class="dot">.</span></h1>
+      <button id="themeBtn" aria-label="Toggle light/dark">☾</button>
+    </div>
+    <div class="tag">What it resells for on eBay UK — and the most you should pay.</div>
+  </header>
+
+  <div class="card">
+    <label for="item">Item</label>
+    <input type="text" id="item" placeholder="e.g. iphone 13 pro, ps5, rtx 4070" autocomplete="off" autocapitalize="off">
+    <div class="suggest" id="suggest"></div>
+
+    <div id="worthbox" class="hidden" style="margin-top:14px">
+      <div class="stats2">
+        <div>
+          <label>Typically sells for</label>
+          <div class="big val" id="worth">—</div>
+          <div class="range" id="range"></div>
+        </div>
+        <div>
+          <label>Sell-through</label>
+          <div class="big val none" id="stbig">—</div>
+          <div class="range" id="stdesc"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ebay">
+      <a id="ebaySold" href="#" target="_blank" rel="noopener">See eBay <b>sold</b><small>what it actually fetched</small></a>
+      <a id="ebayActive" href="#" target="_blank" rel="noopener">See eBay <b>active</b><small>what's listed now</small></a>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="grid2" style="margin-bottom:12px">
+      <div>
+        <label for="sell">Resale price £</label>
+        <input type="number" id="sell" inputmode="decimal" placeholder="0">
+      </div>
+      <div>
+        <label for="ask">Their asking £</label>
+        <input type="number" id="ask" inputmode="decimal" placeholder="0">
+      </div>
+    </div>
+    <div class="grid2">
+      <div>
+        <label for="post">Your postage £</label>
+        <input type="number" id="post" inputmode="decimal" value="5">
+      </div>
+      <div>
+        <div class="slider-row"><label style="margin:0">Target profit</label><span class="v" id="tgtv">30%</span></div>
+        <input type="range" id="tgt" min="0" max="100" step="5" value="30">
+      </div>
+    </div>
+  </div>
+
+  <div class="hero">
+    <div class="lab">Pay no more than</div>
+    <div class="offer val" id="maxoffer">£0</div>
+    <div class="sub" id="breakeven">breakeven at £0</div>
+    <div class="verdict warn" id="verdict"><span>Enter a resale &amp; asking price</span></div>
+  </div>
+
+  <details class="memory card">
+    <summary>Price memory — <span id="memcount">0</span> items scanned</summary>
+    <input type="text" id="memsearch" placeholder="search your scans…" autocomplete="off" style="margin-top:10px">
+    <div class="memlist" id="memlist"></div>
+  </details>
+
+  <div class="foot">
+    Resale = eBay.co.uk median sold price · profit is after ~13.25% + £0.40 eBay fees and your postage.<br>
+    Prices are estimates from past scans — always sanity-check the live eBay sold search before you buy.
+  </div>
+</div>
+
+<script>
+let PRICEBOOK = []; let IDX = [];
+const FEE = 0.1325, FIXED = 0.40;
+const $ = id => document.getElementById(id);
+const money = v => "£" + Math.round(v).toLocaleString();
+
+// --- normalise + synonyms so "ps5" finds "playstation 5" etc. ---
+const SYN = [[/\bplay ?station ?5\b/g,"ps5"],[/\bplay ?station ?4\b/g,"ps4"],
+             [/\bnintendo switch\b/g,"switch"],[/\bmac ?book\b/g,"macbook"],
+             [/\bair ?pods\b/g,"airpods"],[/\bgraphics card\b/g,"gpu"]];
+function norm(s){s=(s||"").toLowerCase();for(const[a,b]of SYN)s=s.replace(a,b);
+  return s.replace(/[^a-z0-9]+/g," ").trim();}
+
+function applyData(d){ PRICEBOOK=d||[]; IDX=PRICEBOOK.map(r=>({q:r[0],m:r[1],st:r[2],n:r[3],p25:r[4],p75:r[5],k:norm(r[0])})); $("memcount").textContent=IDX.length; renderMem(""); if($("item").value) renderSuggest(); }
+
+function search(term,limit){
+  const toks = norm(term).split(" ").filter(Boolean);
+  if(!toks.length) return [];
+  return IDX.filter(e => toks.every(t => e.k.includes(t)))
+            .sort((a,b)=> b.n-a.n || a.q.length-b.q.length)
+            .slice(0,limit);
+}
+
+function stInfo(st){ if(st==null) return ["none","—","no sell-through data yet"];
+  if(st>=60) return ["fast",st+"%","sells fast"];
+  if(st>=30) return ["mid",st+"%","moderate pace"];
+  return ["slow",st+"%","slow to sell"]; }
+
+function useEntry(e){
+  $("sell").value = e.m;
+  showWorth(e);
+  compute();
+  $("sell").focus();
+}
+
+function showWorth(e){
+  $("worthbox").classList.remove("hidden");
+  $("worth").textContent = money(e.m);
+  $("range").textContent = "usually " + money(e.p25) + "–" + money(e.p75);
+  const [c,pctTxt,desc] = stInfo(e.st);
+  const b = $("stbig"); b.className = "big val "+c; b.textContent = pctTxt;
+  $("stdesc").textContent = desc;
+}
+
+function renderSuggest(){
+  const box = $("suggest"); box.innerHTML="";
+  const hits = search($("item").value,5);
+  hits.forEach(e=>{
+    const d=document.createElement("div"); d.className="chip";
+    const st = e.st!=null ? ` · <span style="color:var(--muted)">${e.st}%</span>` : "";
+    d.innerHTML = `<span class="q">${e.q}</span><b>${money(e.m)}${st}</b>`;
+    d.onclick=()=>useEntry(e);
+    box.appendChild(d);
+  });
+  if(hits.length){ showWorth(hits[0]); if(!$("sell").value) $("sell").value=hits[0].m; }
+  updateEbay();
+  compute();
+}
+
+function updateEbay(){
+  const q = encodeURIComponent($("item").value.trim());
+  $("ebaySold").href = q?`https://www.ebay.co.uk/sch/i.html?_nkw=${q}&LH_Sold=1&LH_Complete=1`:"#";
+  $("ebayActive").href = q?`https://www.ebay.co.uk/sch/i.html?_nkw=${q}`:"#";
+}
+
+function compute(){
+  const sell=+$("sell").value||0, ask=+$("ask").value||0,
+        post=+$("post").value||0, tgt=(+$("tgt").value||0)/100;
+  const net = sell*(1-FEE) - FIXED - post;          // what lands in your pocket
+  const maxOffer = net/(1+tgt);                      // buy price that hits target ROI
+  $("maxoffer").textContent = money(Math.max(0,maxOffer));
+  $("breakeven").textContent = "breakeven at " + money(Math.max(0,net));
+  const v=$("verdict");
+  if(!sell || !ask){ v.className="verdict warn"; v.innerHTML="<span>Enter a resale &amp; asking price</span>"; return; }
+  const profit = net - ask, roi = ask? profit/ask : 0;
+  const roiTxt = `<span class="num">${money(profit)}</span> profit · <span class="num">${(roi*100).toFixed(0)}%</span>`;
+  if(profit>0 && roi>=tgt){ v.className="verdict go"; v.innerHTML="✓ Good flip — "+roiTxt; }
+  else if(profit>0){ v.className="verdict warn"; v.innerHTML="Thin — "+roiTxt; }
+  else { v.className="verdict bad"; v.innerHTML="✗ Loss — "+roiTxt; }
+}
+
+function renderMem(term){
+  const list=$("memlist"); list.innerHTML="";
+  const items = term? search(term,60) : IDX.slice(0,60);
+  items.forEach(e=>{
+    const d=document.createElement("div"); d.className="chip";
+    const st = e.st!=null ? ` · <span style="color:var(--muted)">${e.st}%</span>` : "";
+    d.innerHTML=`<span class="q">${e.q}</span><b>${money(e.m)}${st}</b>`;
+    d.onclick=()=>{ $("item").value=e.q; renderSuggest(); window.scrollTo({top:0,behavior:"smooth"}); };
+    list.appendChild(d);
+  });
+}
+
+// theme toggle (default light; remembers choice)
+const _root=document.documentElement;
+if(localStorage.getItem("fc-theme")==="dark") _root.setAttribute("data-theme","dark");
+function syncBtn(){ $("themeBtn").textContent = _root.getAttribute("data-theme")==="dark" ? "☀" : "☾"; }
+syncBtn();
+$("themeBtn").onclick=()=>{
+  if(_root.getAttribute("data-theme")==="dark"){ _root.removeAttribute("data-theme"); localStorage.setItem("fc-theme","light"); }
+  else{ _root.setAttribute("data-theme","dark"); localStorage.setItem("fc-theme","dark"); }
+  syncBtn();
+};
+
+$("item").addEventListener("input",renderSuggest);
+["sell","ask","post"].forEach(id=>$(id).addEventListener("input",compute));
+$("tgt").addEventListener("input",()=>{$("tgtv").textContent=$("tgt").value+"%";compute();});
+$("memsearch").addEventListener("input",e=>renderMem(e.target.value));
+renderMem("");
+updateEbay();
+</script>
+
+<script>fetch("phones.json",{cache:"no-store"}).then(r=>r.json()).then(applyData).catch(()=>applyData([]));</script>
+</body></html>
