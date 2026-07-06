@@ -27,16 +27,28 @@
   .wrap{max-width:460px;margin:0 auto;padding:22px 16px 60px}
   header{margin-bottom:18px}
   .htop{display:flex;justify-content:space-between;align-items:center}
-  #themeBtn{background:var(--surface);border:1px solid var(--line);color:var(--text);
-        width:38px;height:38px;border-radius:11px;font-size:16px;cursor:pointer;line-height:1}
-  #themeBtn:hover{border-color:var(--go)}
+  .hbtns{display:flex;gap:8px}
+  #themeBtn,#infoBtn{background:var(--surface);border:1px solid var(--line);color:var(--text);
+        width:38px;height:38px;border-radius:11px;font-size:17px;cursor:pointer;line-height:1;
+        display:flex;align-items:center;justify-content:center}
+  #themeBtn:hover,#infoBtn:hover{border-color:var(--go)}
+  .sheet{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.45);
+        display:flex;align-items:flex-end;justify-content:center}
+  .sheet.hidden{display:none}
+  .sheet-inner{background:var(--surface);width:100%;max-width:460px;max-height:86vh;overflow-y:auto;
+        border-radius:20px 20px 0 0;padding:16px 16px 34px;box-shadow:0 -8px 40px rgba(0,0,0,.3)}
+  .sheet-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+  .sheet-head b{font-size:16px}
+  #sheetClose{background:var(--field);border:1px solid var(--line);color:var(--text);
+        width:34px;height:34px;border-radius:9px;font-size:14px;cursor:pointer}
+  hr{border:none;border-top:1px solid var(--line);margin:16px 0}
   h1{font:650 20px/1 var(--sans);margin:0;letter-spacing:-.2px}
   h1 .dot{color:var(--go)}
   .tag{color:var(--muted);font-size:12.5px;margin-top:5px}
   label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.09em;
         color:var(--muted);margin:0 0 6px 2px}
   .card{background:var(--surface);border:1px solid var(--line);border-radius:16px;
-        padding:16px;margin-bottom:14px}
+        padding:13px;margin-bottom:10px}
   input[type=text],input[type=number]{width:100%;background:var(--field);border:1px solid var(--line);
         color:var(--text);border-radius:11px;padding:13px 13px;font:500 16px var(--sans)}
   input:focus{outline:none;border-color:var(--go)}
@@ -52,7 +64,7 @@
   .chip .q{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .val{font-family:var(--mono);font-variant-numeric:tabular-nums}
   .stats2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-  .stats2 .big{font:600 30px var(--mono);letter-spacing:-1px;margin-top:3px}
+  .stats2 .big{font:600 27px var(--mono);letter-spacing:-1px;margin-top:2px}
   .stats2 .range{color:var(--muted);font-size:12.5px;margin-top:3px}
   #stbig.fast{color:var(--go)} #stbig.mid{color:var(--warn)} #stbig.slow{color:var(--bad)}
   #stbig.none{color:var(--faint)}
@@ -62,19 +74,19 @@
   .pill.mid{background:rgba(242,181,68,.14);color:var(--warn)}
   .pill.slow{background:rgba(242,118,107,.14);color:var(--bad)}
   .pill.none{background:var(--field);color:var(--faint)}
-  .ebay{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+  .ebay{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:11px}
   .ebay a{text-align:center;text-decoration:none;background:var(--field);border:1px solid var(--line);
-        color:var(--text);border-radius:11px;padding:12px;font-size:13.5px;font-weight:600}
+        color:var(--text);border-radius:10px;padding:9px;font-size:13px;font-weight:500}
+  .ebay a b{font-weight:700}
   .ebay a:hover{border-color:var(--go)}
-  .ebay a small{display:block;color:var(--muted);font-weight:500;font-size:11px;margin-top:2px}
   .slider-row{display:flex;justify-content:space-between;align-items:center;margin:0 2px 8px}
   .slider-row .v{font-family:var(--mono);color:var(--go);font-weight:600}
   input[type=range]{width:100%;accent-color:var(--go)}
   .hero{background:linear-gradient(160deg,var(--hero-a),var(--hero-b));
-        border:1px solid var(--line);border-radius:18px;padding:20px;text-align:center;
-        margin-bottom:14px;position:relative;overflow:hidden}
+        border:1px solid var(--line);border-radius:18px;padding:16px;text-align:center;
+        margin-bottom:10px;position:relative;overflow:hidden}
   .hero .lab{font-size:11px;text-transform:uppercase;letter-spacing:.11em;color:var(--muted)}
-  .hero .offer{font:700 46px/1 var(--mono);letter-spacing:-1.5px;margin:8px 0 4px}
+  .hero .offer{font:700 40px/1 var(--mono);letter-spacing:-1.5px;margin:7px 0 3px}
   .hero .sub{font-size:13px;color:var(--muted)}
   .verdict{margin-top:14px;padding:12px;border-radius:12px;font-size:14.5px;font-weight:600;
         display:flex;justify-content:center;gap:8px;align-items:center}
@@ -95,9 +107,11 @@
   <header>
     <div class="htop">
       <h1>Flip Check<span class="dot">.</span></h1>
-      <button id="themeBtn" aria-label="Toggle light/dark">☾</button>
+      <div class="hbtns">
+        <button id="infoBtn" aria-label="Settings and info">ⓘ</button>
+        <button id="themeBtn" aria-label="Toggle light/dark">☾</button>
+      </div>
     </div>
-    <div class="tag">What it resells for on eBay UK — and the most you should pay.</div>
   </header>
 
   <div class="card">
@@ -105,10 +119,10 @@
     <input type="text" id="item" placeholder="e.g. iphone 13 pro, ps5, rtx 4070" autocomplete="off" autocapitalize="off">
     <div class="suggest" id="suggest"></div>
 
-    <div id="worthbox" class="hidden" style="margin-top:14px">
+    <div id="worthbox" class="hidden" style="margin-top:12px">
       <div class="stats2">
         <div>
-          <label>Typically sells for</label>
+          <label>Sells for</label>
           <div class="big val" id="worth">—</div>
           <div class="range" id="range"></div>
         </div>
@@ -121,13 +135,13 @@
     </div>
 
     <div class="ebay">
-      <a id="ebaySold" href="#" target="_blank" rel="noopener">See eBay <b>sold</b><small>what it actually fetched</small></a>
-      <a id="ebayActive" href="#" target="_blank" rel="noopener">See eBay <b>active</b><small>what's listed now</small></a>
+      <a id="ebaySold" href="#" target="_blank" rel="noopener">eBay <b>sold</b></a>
+      <a id="ebayActive" href="#" target="_blank" rel="noopener">eBay <b>active</b></a>
     </div>
   </div>
 
   <div class="card">
-    <div class="grid2" style="margin-bottom:12px">
+    <div class="grid2">
       <div>
         <label for="sell">Resale price £</label>
         <input type="number" id="sell" inputmode="decimal" placeholder="0">
@@ -135,16 +149,6 @@
       <div>
         <label for="ask">Their asking £</label>
         <input type="number" id="ask" inputmode="decimal" placeholder="0">
-      </div>
-    </div>
-    <div class="grid2">
-      <div>
-        <label for="post">Your postage £</label>
-        <input type="number" id="post" inputmode="decimal" value="5">
-      </div>
-      <div>
-        <div class="slider-row"><label style="margin:0">Target profit</label><span class="v" id="tgtv">30%</span></div>
-        <input type="range" id="tgt" min="0" max="100" step="5" value="30">
       </div>
     </div>
   </div>
@@ -155,16 +159,33 @@
     <div class="sub" id="breakeven">breakeven at £0</div>
     <div class="verdict warn" id="verdict"><span>Enter a resale &amp; asking price</span></div>
   </div>
+</div>
 
-  <details class="memory card">
-    <summary>Price memory — <span id="memcount">0</span> items scanned</summary>
-    <input type="text" id="memsearch" placeholder="search your scans…" autocomplete="off" style="margin-top:10px">
+<div class="sheet hidden" id="sheet">
+  <div class="sheet-inner">
+    <div class="sheet-head"><b>Settings &amp; info</b><button id="sheetClose" aria-label="Close">✕</button></div>
+
+    <div class="grid2">
+      <div>
+        <label for="post">Your postage £</label>
+        <input type="number" id="post" inputmode="decimal" value="5">
+      </div>
+      <div>
+        <div class="slider-row"><label style="margin:0">Target profit</label><span class="v" id="tgtv">30%</span></div>
+        <input type="range" id="tgt" min="0" max="100" step="5" value="30">
+      </div>
+    </div>
+
+    <hr>
+    <label>Price memory — <span id="memcount">0</span> items scanned</label>
+    <input type="text" id="memsearch" placeholder="search your scans…" autocomplete="off">
     <div class="memlist" id="memlist"></div>
-  </details>
 
-  <div class="foot">
-    Resale = eBay.co.uk median sold price · profit is after ~13.25% + £0.40 eBay fees and your postage.<br>
-    Prices are estimates from past scans — always sanity-check the live eBay sold search before you buy.
+    <hr>
+    <div class="foot" style="text-align:left;margin-top:0">
+      Resale = eBay.co.uk median sold price · profit is after ~13.25% + £0.40 eBay fees and your postage.<br>
+      Prices are estimates from past scans — always sanity-check the live eBay sold search before you buy.
+    </div>
   </div>
 </div>
 
@@ -197,10 +218,13 @@ function stInfo(st){ if(st==null) return ["none","—","no sell-through data yet
   return ["slow",st+"%","slow to sell"]; }
 
 function useEntry(e){
-  $("sell").value = e.m;
+  $("item").value = e.q;        // fill the box with the full name
+  $("suggest").innerHTML = "";  // and close the suggestion list
   showWorth(e);
+  $("sell").value = e.m;
+  updateEbay();
   compute();
-  $("sell").focus();
+  $("ask").focus();             // jump to 'their asking' — the thing you type next
 }
 
 function showWorth(e){
@@ -271,6 +295,15 @@ $("themeBtn").onclick=()=>{
   else{ _root.setAttribute("data-theme","dark"); localStorage.setItem("fc-theme","dark"); }
   syncBtn();
 };
+
+// info sheet (postage, target, price memory, disclaimer)
+$("infoBtn").onclick=()=>$("sheet").classList.remove("hidden");
+$("sheetClose").onclick=()=>$("sheet").classList.add("hidden");
+$("sheet").addEventListener("click",e=>{ if(e.target===$("sheet")) $("sheet").classList.add("hidden"); });
+// tapping anywhere outside the search closes the suggestion list
+document.addEventListener("click",e=>{
+  if(!$("item").contains(e.target) && !$("suggest").contains(e.target)) $("suggest").innerHTML="";
+});
 
 $("item").addEventListener("input",renderSuggest);
 ["sell","ask","post"].forEach(id=>$(id).addEventListener("input",compute));
