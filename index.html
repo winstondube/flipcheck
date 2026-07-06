@@ -224,7 +224,7 @@ function useEntry(e){
   $("sell").value = e.m;
   updateEbay();
   compute();
-  $("ask").focus();             // jump to 'their asking' — the thing you type next
+  // no auto-focus — keep the number in view; you tap 'asking' only when you want to
 }
 
 function showWorth(e){
