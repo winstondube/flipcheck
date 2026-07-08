@@ -63,9 +63,10 @@
   .chip b{font-family:var(--mono);color:var(--text)}
   .chip .q{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .val{font-family:var(--mono);font-variant-numeric:tabular-nums}
-  .stats2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-  .stats2 .big{font:600 27px var(--mono);letter-spacing:-1px;margin-top:2px}
-  .stats2 .range{color:var(--muted);font-size:12.5px;margin-top:3px}
+  .stats3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px}
+  .stats3 .big{font:600 22px var(--mono);letter-spacing:-1px;margin-top:2px}
+  .stats3 label{font-size:10px}
+  .stats3 .range{color:var(--muted);font-size:11px;margin-top:2px}
   #stbig.fast{color:var(--go)} #stbig.mid{color:var(--warn)} #stbig.slow{color:var(--bad)}
   #stbig.none{color:var(--faint)}
   .pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;
@@ -74,7 +75,7 @@
   .pill.mid{background:rgba(242,181,68,.14);color:var(--warn)}
   .pill.slow{background:rgba(242,118,107,.14);color:var(--bad)}
   .pill.none{background:var(--field);color:var(--faint)}
-  .ebay{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:11px}
+  .ebay{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;margin-top:11px}
   .ebay a{text-align:center;text-decoration:none;background:var(--field);border:1px solid var(--line);
         color:var(--text);border-radius:10px;padding:9px;font-size:13px;font-weight:500}
   .ebay a b{font-weight:700}
@@ -120,9 +121,9 @@
     <div class="suggest" id="suggest"></div>
 
     <div id="worthbox" class="hidden" style="margin-top:12px">
-      <div class="stats2">
+      <div class="stats3">
         <div>
-          <label>Sells for</label>
+          <label>eBay sells for</label>
           <div class="big val" id="worth">—</div>
           <div class="range" id="range"></div>
         </div>
@@ -131,12 +132,18 @@
           <div class="big val none" id="stbig">—</div>
           <div class="range" id="stdesc"></div>
         </div>
+        <div>
+          <label>CeX cash</label>
+          <div class="big val" id="cexbig" style="color:var(--muted)">—</div>
+          <div class="range">instant floor</div>
+        </div>
       </div>
     </div>
 
     <div class="ebay">
       <a id="ebaySold" href="#" target="_blank" rel="noopener">eBay <b>sold</b></a>
       <a id="ebayActive" href="#" target="_blank" rel="noopener">eBay <b>active</b></a>
+      <a id="cexLink" href="#" target="_blank" rel="noopener"><b>CeX</b></a>
     </div>
   </div>
 
@@ -202,7 +209,7 @@ const SYN = [[/\bplay ?station ?5\b/g,"ps5"],[/\bplay ?station ?4\b/g,"ps4"],
 function norm(s){s=(s||"").toLowerCase();for(const[a,b]of SYN)s=s.replace(a,b);
   return s.replace(/[^a-z0-9]+/g," ").trim();}
 
-function applyData(d){ PRICEBOOK=d||[]; IDX=PRICEBOOK.map(r=>({q:r[0],m:r[1],st:r[2],n:r[3],p25:r[4],p75:r[5],k:norm(r[0])})); $("memcount").textContent=IDX.length; renderMem(""); if($("item").value) renderSuggest(); }
+function applyData(d){ PRICEBOOK=d||[]; IDX=PRICEBOOK.map(r=>({q:r[0],m:r[1],st:r[2],n:r[3],p25:r[4],p75:r[5],cex:r[6],k:norm(r[0])})); $("memcount").textContent=IDX.length; renderMem(""); if($("item").value) renderSuggest(); }
 
 function search(term,limit){
   const toks = norm(term).split(" ").filter(Boolean);
@@ -234,6 +241,7 @@ function showWorth(e){
   const [c,pctTxt,desc] = stInfo(e.st);
   const b = $("stbig"); b.className = "big val "+c; b.textContent = pctTxt;
   $("stdesc").textContent = desc;
+  $("cexbig").textContent = e.cex ? money(e.cex) : "—";
 }
 
 function renderSuggest(){
@@ -255,6 +263,7 @@ function updateEbay(){
   const q = encodeURIComponent($("item").value.trim());
   $("ebaySold").href = q?`https://www.ebay.co.uk/sch/i.html?_nkw=${q}&LH_Sold=1&LH_Complete=1`:"#";
   $("ebayActive").href = q?`https://www.ebay.co.uk/sch/i.html?_nkw=${q}`:"#";
+  $("cexLink").href = q?`https://uk.webuy.com/search?stext=${q}`:"#";
 }
 
 function compute(){
