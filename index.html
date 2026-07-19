@@ -101,6 +101,25 @@
   .memory[open] summary::before{content:"▾ "}
   .memlist{max-height:280px;overflow-y:auto;margin-top:8px;display:flex;flex-direction:column;gap:5px}
   .foot{color:var(--faint);font-size:11.5px;text-align:center;margin-top:20px;line-height:1.6}
+  #dealsBtn{position:relative;background:var(--surface);border:1px solid var(--line);color:var(--text);
+        width:38px;height:38px;border-radius:11px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  #dealsBtn:hover{border-color:var(--go)}
+  #dealsBtn svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.7;
+        stroke-linejoin:round;stroke-linecap:round}
+  #dealsBadge{position:absolute;top:-6px;right:-6px;min-width:17px;height:17px;padding:0 4px;
+        background:var(--go);color:#fff;border-radius:999px;font:700 11px/17px var(--sans);
+        text-align:center;display:none}
+  #dealsBadge.on{display:block}
+  .deal{display:flex;gap:12px;align-items:center;text-decoration:none;
+        background:var(--surface2);border:1px solid var(--line);border-radius:12px;
+        padding:11px 12px;margin-bottom:8px}
+  .deal:hover{border-color:var(--go)}
+  .deal .dm{font:700 18px var(--mono);color:var(--go);white-space:nowrap;letter-spacing:-.5px}
+  .deal .dbody{min-width:0}
+  .deal .dt{color:var(--text);font-size:13.5px;font-weight:600;line-height:1.3;overflow:hidden;
+        text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+  .deal .dsub{color:var(--muted);font-size:11.5px;margin-top:3px;font-family:var(--mono)}
+  .empty{color:var(--faint);font-size:13px;text-align:center;padding:26px 10px;line-height:1.6}
   .hidden{display:none}
 </style>
 
@@ -109,6 +128,7 @@
     <div class="htop">
       <h1>Flip Check<span class="dot">.</span></h1>
       <div class="hbtns">
+        <button id="dealsBtn" aria-label="Live deals"><svg viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg><span id="dealsBadge"></span></button>
         <button id="infoBtn" aria-label="Settings and info">ⓘ</button>
         <button id="themeBtn" aria-label="Toggle light/dark">☾</button>
       </div>
@@ -165,6 +185,14 @@
     <div class="offer val" id="maxoffer">£0</div>
     <div class="sub" id="breakeven">breakeven at £0</div>
     <div class="verdict warn" id="verdict"><span>Enter a resale &amp; asking price</span></div>
+  </div>
+</div>
+
+<div class="sheet hidden" id="dealsSheet">
+  <div class="sheet-inner">
+    <div class="sheet-head"><b>Live deals <span id="dealsCount" style="color:var(--muted);font-weight:500"></span></b><button id="dealsClose" aria-label="Close">✕</button></div>
+    <div class="tag" style="margin:-6px 0 12px">Marketplace phones near you clearing your target margin, priced against eBay sold + CeX. Tap to open the listing.</div>
+    <div id="dealsList"></div>
   </div>
 </div>
 
@@ -309,6 +337,30 @@ $("themeBtn").onclick=()=>{
 $("infoBtn").onclick=()=>$("sheet").classList.remove("hidden");
 $("sheetClose").onclick=()=>$("sheet").classList.add("hidden");
 $("sheet").addEventListener("click",e=>{ if(e.target===$("sheet")) $("sheet").classList.add("hidden"); });
+
+// live deals — Facebook Marketplace sweep, priced vs eBay/CeX (deals.json)
+let DEALS = [];
+function applyDeals(rows){
+  DEALS = Array.isArray(rows) ? rows : [];
+  const n = DEALS.length, badge=$("dealsBadge");
+  $("dealsCount").textContent = n ? `· ${n}` : "";
+  badge.textContent = n>99 ? "99+" : n; badge.className = n ? "on" : "";
+  const list=$("dealsList"); list.innerHTML="";
+  if(!n){ list.innerHTML='<div class="empty">No live deals right now.<br>The sweep runs through the day — check back.</div>'; return; }
+  DEALS.forEach(d=>{
+    const [title,price,med,cex,margin,st,loc,url]=d;
+    const a=document.createElement("a"); a.className="deal";
+    a.href=url||"#"; a.target="_blank"; a.rel="noopener";
+    a.innerHTML=`<div class="dm">+${money(margin)}</div><div class="dbody">`+
+      `<div class="dt">${title}</div><div class="dsub">buy ${money(price)} → sell ${money(med)}`+
+      ` · CeX ${cex?money(cex):"—"}${st!=null?` · ${st}% sold`:""}${loc?` · ${loc}`:""}</div></div>`;
+    list.appendChild(a);
+  });
+}
+$("dealsBtn").onclick=()=>$("dealsSheet").classList.remove("hidden");
+$("dealsClose").onclick=()=>$("dealsSheet").classList.add("hidden");
+$("dealsSheet").addEventListener("click",e=>{ if(e.target===$("dealsSheet")) $("dealsSheet").classList.add("hidden"); });
+fetch("deals.json",{cache:"no-store"}).then(r=>r.json()).then(applyDeals).catch(()=>applyDeals([]));
 // tapping anywhere outside the search closes the suggestion list
 document.addEventListener("click",e=>{
   if(!$("item").contains(e.target) && !$("suggest").contains(e.target)) $("suggest").innerHTML="";
