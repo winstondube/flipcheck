@@ -110,9 +110,17 @@
         background:var(--go);color:#fff;border-radius:999px;font:700 11px/17px var(--sans);
         text-align:center;display:none}
   #dealsBadge.on{display:block}
-  .deal{display:flex;gap:12px;align-items:center;text-decoration:none;
+  .deal-wrap{position:relative;overflow:hidden;border-radius:12px;margin-bottom:8px}
+  .deal-wrap.removing{opacity:0;height:0!important;margin:0;
+        transition:opacity .18s ease,height .18s ease,margin .18s ease}
+  .deal-actions{position:absolute;inset:0;display:flex;justify-content:flex-end}
+  .deal-actions button{border:none;width:76px;height:100%;cursor:pointer;
+        font:600 13px var(--sans)}
+  .da-cancel{background:var(--field);color:var(--muted)}
+  .da-remove{background:var(--bad);color:#fff}
+  .deal{position:relative;display:flex;gap:12px;align-items:center;cursor:pointer;
         background:var(--surface2);border:1px solid var(--line);border-radius:12px;
-        padding:11px 12px;margin-bottom:8px}
+        padding:11px 12px;touch-action:pan-y;will-change:transform}
   .deal:hover{border-color:var(--go)}
   .deal .dm{font:700 18px var(--mono);color:var(--go);white-space:nowrap;letter-spacing:-.5px}
   .deal .dbody{min-width:0}
@@ -351,30 +359,85 @@ function ago(sec){
   if(d < 86400) return Math.floor(d/3600)+"h ago";
   return Math.floor(d/86400)+"d ago";
 }
+// dismissed leads live on-device (keyed by listing URL, kept 7 days) so a dead
+// lead you swipe away stays gone even after the next sweep re-adds it.
+const DISMISS_KEY="fc-dismissed";
+function loadDismissed(){
+  let m={}; try{ m=JSON.parse(localStorage.getItem(DISMISS_KEY)||"{}"); }catch(e){}
+  const cut=Date.now()-7*864e5; let ch=false;
+  for(const k in m){ if(m[k]<cut){ delete m[k]; ch=true; } }
+  if(ch){ try{ localStorage.setItem(DISMISS_KEY,JSON.stringify(m)); }catch(e){} }
+  return m;
+}
+function dismiss(url){
+  const m=loadDismissed(); m[url]=Date.now();
+  try{ localStorage.setItem(DISMISS_KEY,JSON.stringify(m)); }catch(e){}
+}
+function closeOtherDeals(except){
+  $("dealsList").querySelectorAll(".deal-wrap").forEach(w=>{ if(w!==except&&w._close)w._close(); });
+}
+function updateDealCounts(){
+  const dm=loadDismissed(), nowS=Date.now()/1000;
+  const vis=DEALS.filter(d=>!dm[d[7]]), n=vis.length, badge=$("dealsBadge");
+  const fresh=vis.filter(d=>d[8]&&nowS-d[8]<86400).length;   // found <24h
+  badge.textContent=n>99?"99+":n; badge.className=n?"on":"";
+  $("dealsCount").textContent=n?`· ${n}${fresh?`, ${fresh} new`:""}`:"";
+  const upd=DEALS.reduce((m,d)=>Math.max(m,d[9]||0),0);
+  $("dealsUpd").textContent=upd?`Board updated ${ago(upd)} · sweeps every ~3h while your Mac is awake`
+                               :"Sweeps every ~3h while your Mac is awake.";
+  if(!n && !$("dealsList").querySelector(".deal-wrap"))
+    $("dealsList").innerHTML='<div class="empty">No live deals right now.<br>The sweep runs through the day — check back.</div>';
+}
+function makeDeal(d){
+  const [title,price,med,cex,margin,st,loc,url,first]=d;
+  const nowS=Date.now()/1000, isNew=first&&(nowS-first)<86400, seen=first?ago(first):"";
+  const wrap=document.createElement("div"); wrap.className="deal-wrap";
+  wrap.innerHTML=
+    '<div class="deal-actions"><button class="da-cancel">Cancel</button><button class="da-remove">Remove</button></div>'+
+    `<div class="deal"><div class="dm">+${money(margin)}</div><div class="dbody">`+
+    `<div class="dt">${title}${isNew?' <span class="newpill">NEW</span>':''}</div>`+
+    `<div class="dsub">buy ${money(price)} → sell ${money(med)} · CeX ${cex?money(cex):"—"}`+
+    `${st!=null?` · ${st}% sold`:""}${loc?` · ${loc}`:""}</div>`+
+    (seen?`<div class="dwhen">found ${seen}</div>`:"")+'</div></div>';
+  const card=wrap.querySelector(".deal"), OPEN=-152;
+  let x0=null,y0=null,dx=0,open=false,moved=false;
+  const setX=(v,anim)=>{ card.style.transition=anim?"transform .2s ease":"none";
+        card.style.transform=`translateX(${v}px)`; };
+  const openCard=()=>{ open=true; setX(OPEN,true); closeOtherDeals(wrap); };
+  const closeCard=()=>{ open=false; setX(0,true); };
+  wrap._close=closeCard;
+  card.addEventListener("touchstart",e=>{ x0=e.touches[0].clientX; y0=e.touches[0].clientY; moved=false; },{passive:true});
+  card.addEventListener("touchmove",e=>{
+    if(x0==null)return; dx=e.touches[0].clientX-x0; const dy=e.touches[0].clientY-y0;
+    if(!moved&&Math.abs(dx)<Math.abs(dy))return;          // vertical scroll — leave it
+    if(Math.abs(dx)>6)moved=true;
+    let v=(open?OPEN:0)+dx; v=Math.max(OPEN-24,Math.min(0,v)); setX(v,false);
+  },{passive:true});
+  card.addEventListener("touchend",()=>{
+    if(x0!=null&&moved){ const v=(open?OPEN:0)+dx; if(v<-70)openCard(); else closeCard(); }
+    x0=y0=null; dx=0;
+  });
+  card.addEventListener("click",e=>{
+    if(open){ e.preventDefault(); closeCard(); return; }   // tap card while open = cancel
+    if(moved){ e.preventDefault(); return; }               // was a swipe, not a tap
+    window.open(url,"_blank","noopener");
+  });
+  wrap.querySelector(".da-cancel").onclick=closeCard;
+  wrap.querySelector(".da-remove").onclick=()=>{
+    dismiss(url); wrap.style.height=wrap.offsetHeight+"px";
+    requestAnimationFrame(()=>wrap.classList.add("removing"));
+    setTimeout(()=>{ wrap.remove(); updateDealCounts(); },200);
+  };
+  return wrap;
+}
 function applyDeals(rows){
   DEALS = Array.isArray(rows) ? rows : [];
-  const n = DEALS.length, badge=$("dealsBadge"), nowS=Date.now()/1000;
-  const fresh = DEALS.filter(d => d[8] && nowS-d[8] < 86400).length;   // found <24h
-  badge.textContent = n>99 ? "99+" : n; badge.className = n ? "on" : "";
-  $("dealsCount").textContent = n ? `· ${n}${fresh?`, ${fresh} new`:""}` : "";
-  const upd = DEALS.reduce((m,d)=>Math.max(m, d[9]||0), 0);
-  $("dealsUpd").textContent = upd ? `Board updated ${ago(upd)} · sweeps every ~3h while your Mac is awake`
-                                  : "Sweeps every ~3h while your Mac is awake.";
-  const list=$("dealsList"); list.innerHTML="";
-  if(!n){ list.innerHTML='<div class="empty">No live deals right now.<br>The sweep runs through the day — check back.</div>'; return; }
-  DEALS.forEach(d=>{
-    const [title,price,med,cex,margin,st,loc,url,first]=d;
-    const a=document.createElement("a"); a.className="deal";
-    a.href=url||"#"; a.target="_blank"; a.rel="noopener";
-    const isNew = first && (nowS-first) < 86400;
-    const seen = first ? ago(first) : "";
-    a.innerHTML=`<div class="dm">+${money(margin)}</div><div class="dbody">`+
-      `<div class="dt">${title}${isNew?' <span class="newpill">NEW</span>':''}</div>`+
-      `<div class="dsub">buy ${money(price)} → sell ${money(med)}`+
-      ` · CeX ${cex?money(cex):"—"}${st!=null?` · ${st}% sold`:""}${loc?` · ${loc}`:""}</div>`+
-      (seen?`<div class="dwhen">found ${seen}</div>`:"")+`</div>`;
-    list.appendChild(a);
-  });
+  const dm=loadDismissed(), list=$("dealsList");
+  list.innerHTML="";
+  const vis=DEALS.filter(d=>!dm[d[7]]);
+  if(!vis.length) list.innerHTML='<div class="empty">No live deals right now.<br>The sweep runs through the day — check back.</div>';
+  else vis.forEach(d=>list.appendChild(makeDeal(d)));
+  updateDealCounts();
 }
 $("dealsBtn").onclick=()=>$("dealsSheet").classList.remove("hidden");
 $("dealsClose").onclick=()=>$("dealsSheet").classList.add("hidden");
