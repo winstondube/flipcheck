@@ -119,6 +119,9 @@
   .deal .dt{color:var(--text);font-size:13.5px;font-weight:600;line-height:1.3;overflow:hidden;
         text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
   .deal .dsub{color:var(--muted);font-size:11.5px;margin-top:3px;font-family:var(--mono)}
+  .deal .dwhen{color:var(--faint);font-size:11px;margin-top:3px}
+  .newpill{display:inline-block;background:var(--go);color:#fff;font:700 9.5px/1 var(--sans);
+        letter-spacing:.04em;padding:3px 5px;border-radius:5px;vertical-align:middle;margin-left:4px}
   .empty{color:var(--faint);font-size:13px;text-align:center;padding:26px 10px;line-height:1.6}
   .hidden{display:none}
 </style>
@@ -191,7 +194,8 @@
 <div class="sheet hidden" id="dealsSheet">
   <div class="sheet-inner">
     <div class="sheet-head"><b>Live deals <span id="dealsCount" style="color:var(--muted);font-weight:500"></span></b><button id="dealsClose" aria-label="Close">✕</button></div>
-    <div class="tag" style="margin:-6px 0 12px">Marketplace phones near you clearing your target margin, priced against eBay sold + CeX. Tap to open the listing.</div>
+    <div class="tag" style="margin:-6px 0 4px">Marketplace phones near you clearing your target margin, priced against eBay sold + CeX. Tap to open the listing.</div>
+    <div class="tag" id="dealsUpd" style="margin:0 0 12px;color:var(--faint)"></div>
     <div id="dealsList"></div>
   </div>
 </div>
@@ -340,20 +344,35 @@ $("sheet").addEventListener("click",e=>{ if(e.target===$("sheet")) $("sheet").cl
 
 // live deals — Facebook Marketplace sweep, priced vs eBay/CeX (deals.json)
 let DEALS = [];
+function ago(sec){
+  if(!sec) return "";
+  const d = Date.now()/1000 - sec;
+  if(d < 3600) return "just now";
+  if(d < 86400) return Math.floor(d/3600)+"h ago";
+  return Math.floor(d/86400)+"d ago";
+}
 function applyDeals(rows){
   DEALS = Array.isArray(rows) ? rows : [];
-  const n = DEALS.length, badge=$("dealsBadge");
-  $("dealsCount").textContent = n ? `· ${n}` : "";
+  const n = DEALS.length, badge=$("dealsBadge"), nowS=Date.now()/1000;
+  const fresh = DEALS.filter(d => d[8] && nowS-d[8] < 86400).length;   // found <24h
   badge.textContent = n>99 ? "99+" : n; badge.className = n ? "on" : "";
+  $("dealsCount").textContent = n ? `· ${n}${fresh?`, ${fresh} new`:""}` : "";
+  const upd = DEALS.reduce((m,d)=>Math.max(m, d[9]||0), 0);
+  $("dealsUpd").textContent = upd ? `Board updated ${ago(upd)} · sweeps every ~3h while your Mac is awake`
+                                  : "Sweeps every ~3h while your Mac is awake.";
   const list=$("dealsList"); list.innerHTML="";
   if(!n){ list.innerHTML='<div class="empty">No live deals right now.<br>The sweep runs through the day — check back.</div>'; return; }
   DEALS.forEach(d=>{
-    const [title,price,med,cex,margin,st,loc,url]=d;
+    const [title,price,med,cex,margin,st,loc,url,first]=d;
     const a=document.createElement("a"); a.className="deal";
     a.href=url||"#"; a.target="_blank"; a.rel="noopener";
+    const isNew = first && (nowS-first) < 86400;
+    const seen = first ? ago(first) : "";
     a.innerHTML=`<div class="dm">+${money(margin)}</div><div class="dbody">`+
-      `<div class="dt">${title}</div><div class="dsub">buy ${money(price)} → sell ${money(med)}`+
-      ` · CeX ${cex?money(cex):"—"}${st!=null?` · ${st}% sold`:""}${loc?` · ${loc}`:""}</div></div>`;
+      `<div class="dt">${title}${isNew?' <span class="newpill">NEW</span>':''}</div>`+
+      `<div class="dsub">buy ${money(price)} → sell ${money(med)}`+
+      ` · CeX ${cex?money(cex):"—"}${st!=null?` · ${st}% sold`:""}${loc?` · ${loc}`:""}</div>`+
+      (seen?`<div class="dwhen">found ${seen}</div>`:"")+`</div>`;
     list.appendChild(a);
   });
 }
